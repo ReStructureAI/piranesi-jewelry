@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Piranesi Jewelry · Public Catalog Mirror</title>
+<meta name="description" content="Browsable mirror of the public piranesi.com catalog: 465 products, 226 collections, with downloadable JSON.">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<style>
+:root{--paper:#ffffeb;--ink:#1a1a1a;--soft:#f5f1e3;--hair:#e3ddcc;--dim:#5f6157;--faint:#8a8a7d;--accent:#034f46;--lav:#f0d7ff;--sans:Figtree,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans)}
+header{padding:28px 20px 18px;border-bottom:1px solid var(--hair);background:var(--soft)}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:14px;line-height:1.5}
+.sub a{color:var(--accent)}
+.counts{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--dim)}
+.counts b{color:var(--ink);font-size:16px;margin-right:4px}
+.bar{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--hair);padding:12px 20px;z-index:5}
+.bar .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=search]{flex:1;min-width:200px;font:inherit;font-size:15px;padding:10px 14px;border:1px solid var(--hair);border-radius:999px;background:#fff;color:var(--ink);outline:none}
+input[type=search]:focus{border-color:var(--accent)}
+select{font:inherit;font-size:13px;padding:9px 12px;border:1px solid var(--hair);border-radius:999px;background:#fff;color:var(--ink)}
+a.dl{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:999px;padding:9px 14px;white-space:nowrap}
+a.dl:hover{background:var(--lav);border-color:var(--ink);color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:20px}
+.card{background:#fff;border:1px solid var(--hair);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}
+.card .ph{aspect-ratio:1;background:var(--soft) center/cover no-repeat;display:block}
+.card .in{padding:12px 14px 14px}
+.card .ty{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+.card h3{font-size:14px;margin:4px 0 8px;font-weight:600;line-height:1.35}
+.card .pr{font-size:14px;color:var(--accent);font-weight:600}
+.card .oos{font-size:11px;color:var(--faint);margin-left:6px}
+.meta{padding:0 20px 8px;color:var(--faint);font-size:12px}
+details{margin:0 20px 30px;border:1px solid var(--hair);border-radius:14px;background:#fff}
+summary{padding:14px 18px;cursor:pointer;font-weight:600}
+.cols{columns:3;column-gap:24px;padding:6px 18px 18px;font-size:13px}
+.cols a{display:block;padding:3px 0;color:var(--dim);text-decoration:none;break-inside:avoid}
+.cols a:hover{color:var(--accent)}
+footer{border-top:1px solid var(--hair);padding:18px 20px 30px;color:var(--faint);font-size:12px;line-height:1.6}
+footer a{color:var(--accent)}
+@media(max-width:720px){.cols{columns:1}.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Piranesi Jewelry</h1>
+<div class="sub">Public mirror of the <a href="https://piranesi.com/">piranesi.com</a> catalog, extracted <span id="when"></span>. Every card links to the live product page. Full dataset below as JSON.</div>
+<div class="counts" id="counts"></div>
+</div></header>
+<div class="bar"><div class="wrap">
+<input type="search" id="q" placeholder="Search rings, necklaces, stones, gold…" autocomplete="off">
+<select id="type"><option value="">All types</option></select>
+<select id="sort"><option value="name">Name A–Z</option><option value="plo">Price low → high</option><option value="phi">Price high → low</option></select>
+<a class="dl" href="/piranesi_db.json" download>Download JSON (full DB)</a>
+<a class="dl" href="https://github.com/ReStructureAI/piranesi-jewelry" target="_blank" rel="noopener">GitHub repo</a>
+</div></div>
+<div class="meta" id="showing" style="padding-top:12px"></div>
+<div class="grid" id="grid"></div>
+<details><summary>Collections (<span id="ncol"></span>)</summary><div class="cols" id="cols"></div></details>
+<footer><div class="wrap">
+Source: <a href="https://piranesi.com/">piranesi.com</a> (Shopify public catalog; product pages, collections, pages, articles). Prices and availability as of extraction — the live product page is authoritative.<br>
+Mirror by <a href="https://re-structure.ai/">ReStructure AI</a> · Data: <a href="/piranesi_db.json">piranesi_db.json</a> · <a href="https://github.com/ReStructureAI/piranesi-jewelry">ReStructureAI/piranesi-jewelry</a>
+</div></footer>
+<script>
+let D=null;
+const $=s=>document.querySelector(s);
+const fmt=n=>n==null?'Price on request':'$'+Math.round(n).toLocaleString('en-US');
+function card(p){
+ const pr=p.p0==null?'Price on request':(p.p0===p.p1?fmt(p.p0):fmt(p.p0)+' – '+fmt(p.p1));
+ return '<a class="card" href="'+p.u+'" target="_blank" rel="noopener">'+
+ '<span class="ph" style="background-image:url('+(p.img||'/favicon.svg')+')"></span>'+
+ '<span class="in"><span class="ty">'+p.ty+'</span><h3>'+p.t+'</h3>'+
+ '<span class="pr">'+pr+'</span>'+(p.av?'':'<span class="oos">sold out</span>')+'</span></a>';
+}
+function render(){
+ const q=$('#q').value.trim().toLowerCase(), ty=$('#type').value, s=$('#sort').value;
+ let list=D.products.filter(p=>(!ty||p.ty===ty)&&(!q||(p.t+' '+p.ty+' '+p.v+' '+p.tg.join(' ')+' '+p.d).toLowerCase().includes(q)));
+ if(s==='name')list.sort((a,b)=>a.t.localeCompare(b.t));
+ if(s==='plo')list.sort((a,b)=>(a.p0??1e15)-(b.p0??1e15));
+ if(s==='phi')list.sort((a,b)=>(b.p0??-1)-(a.p0??-1));
+ $('#showing').textContent='Showing '+list.length+' of '+D.products.length+' products';
+ $('#grid').innerHTML=list.map(card).join('');
+}
+fetch('/data.json').then(r=>r.json()).then(d=>{
+ D=d;
+ $('#when').textContent=new Date(d.extracted_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+ $('#counts').innerHTML='<span><b>'+d.counts.products+'</b>products</span><span><b>'+d.counts.collections+'</b>collections</span><span><b>'+d.counts.pages+'</b>pages</span><span><b>'+d.counts.articles+'</b>articles</span>';
+ $('#type').innerHTML='<option value="">All types</option>'+d.types.map(t=>'<option>'+t+'</option>').join('');
+ $('#ncol').textContent=d.collections.length;
+ $('#cols').innerHTML=d.collections.map(c=>'<a href="'+c.u+'" target="_blank" rel="noopener">'+c.t+'</a>').join('');
+ ['q','type','sort'].forEach(id=>$('#'+id).addEventListener('input',render));
+ render();
+});
+</script>
+</body>
+</html>
